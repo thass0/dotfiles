@@ -4,9 +4,6 @@
 
 ;;; Code:
 
-(setenv "PATH" (concat (getenv "PATH") ":/home/thasso/bin"))
-(setq exec-path (append exec-path '("/home/thasso/bin")))
-
 ;; Setup melpa packages.
 (require 'package)
 (add-to-list 'package-archives
@@ -21,7 +18,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(nim-mode company-lsp auctex ivy projectile yasnippet company lsp-ui lsp-mode rustic yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken flycheck ## markdown-mode rainbow-delimiters))
+   '(exec-path-from-shell nim-mode company-lsp auctex ivy projectile yasnippet company lsp-ui lsp-mode rustic yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken flycheck ## markdown-mode rainbow-delimiters))
  '(warning-suppress-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -38,6 +35,13 @@
   (setq use-package-always-ensure t
         use-package-expand-minimally t))
 
+
+;; Inherit a shell's environment variables to run commands as usual.
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 
 ;; Git gutter highlights on the side
 (use-package git-gutter
@@ -92,7 +96,7 @@
 
 
 ;; Change the font size to something readable.
-(set-face-attribute 'default nil :height 160)
+(set-face-attribute 'default nil :height 190)
 
 ;; Use the `CommitMono` font.
 (set-face-attribute 'default t :font "CommitMono")
@@ -167,6 +171,24 @@
   ;; This can prevent to edit them by accident.
   (when (string-match "/\.nimble/" (or (buffer-file-name) "")) (read-only-mode 1)))
 
+;; Haskell language configuration.
+(use-package haskell-mode
+  :ensure t)
+
+(use-package eglot
+  :ensure t
+  :config
+  (add-hook 'haskell-mode-hook 'eglot-ensure)
+  :config
+  (setq-default eglot-workspace-configuration
+                '((haskell
+                   (plugin
+                    (stan
+                     (globalOn . :json-false)))))) ;; disable stan
+  :custom
+  (eglot-autoshutdown t) ;; shutdown language server after closing last file
+  (eglot-confirm-server-initiated-edits nil) ;; allow edits without confirmation
+  )
 
 ;; LSP configuration.
 (use-package lsp-mode
@@ -300,97 +322,23 @@
 (dolist (hook '(text-mode-hook markdown-mode-hook))
   (add-hook hook #'flyspell-mode))
 
-
-;; Preview the current Markdown file in Firefox. Bound to "C-c p".
-;; All preview files are stored in /tmp and deleted once Emacs is quit.
-(defun my/run-preview-note ()
-  "Run the preview-note process using the filename of the current buffer."
-  (interactive)
-  (let ((filename (buffer-file-name)))
-    (unless filename
-      (error "Buffer is not visiting a file"))
-    (if (string-equal "md" (file-name-extension filename))
-	;; (start-process "preview-note-process"
-	;; 	       nil
-	;; 	       "~/bin/preview-note"
-	;; 	       (shell-quote-argument filename))
-	;; Use for debugging to view the command output:
-	(async-shell-command (concat
-			      "~/bin/preview-note "
-			      (shell-quote-argument filename)))
-	(message "Cannot preview because this buffer is not a '.md' file."))))
-(define-key global-map (kbd "C-c m p") #'my/run-preview-note)
-
+(use-package motes
+  :init (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
+  :load-path ("~/.emacs.d/elisp/motes.el")
+  :config (setq motes-author "Thassilo Schulze")
+  :bind
+  ("C-c m p" . #'motes-preview)
+  ("C-c m s" . #'motes-share)
+  ("C-c m n" . #'motes-new))
 
 ;; Run a Jekyll server in the current directory.
 (defun my/run-jekyll-serve (flags)
   "Launch a Jekyll development server"
-    (interactive (list (read-string "Flags: " "--drafts")))
-    (if (file-exists-p (concat default-directory "_config.yml"))
-	(async-shell-command (concat "jekyll serve " flags))
-      (message "There is no _config.yml in this directory. Without it, this directory cannot be a Jekyll root.")))
+  (interactive (list (read-string "Flags: " "--drafts")))
+  (if (file-exists-p (concat default-directory "_config.yml"))
+      (async-shell-command (concat "jekyll serve " flags))
+    (message "There is no _config.yml in this directory. Without it, this directory cannot be a Jekyll root.")))
 (define-key global-map (kbd "C-c j") #'my/run-jekyll-serve)
-
-(defun my/title-case (input)
-  "Convert the string `input` to title case."
-  (let* ((words (split-string input))
-         (first (pop words))
-         (last (car (last words)))
-         (do-not-capitalize '("a" "ago" "an" "and" "as" "at" "but" "by" "for"
-                              "from" "in" "into" "it" "next" "nor" "of" "off"
-                              "on" "onto" "or" "over" "past" "so" "the" "till"
-                              "to" "up" "yet" "n" "t" "es" "s")))
-    (concat (capitalize first)
-            " "
-            (mapconcat (lambda (w)
-                         (if (not (member (downcase w) do-not-capitalize))
-                             (capitalize w)
-			   (downcase w)))
-                       (butlast words) " ")
-            " " (capitalize last))))
-
-(defun my/reduce-whitespace (s)
-  "Remove all whitespace from S except for single space characters."
-  (replace-regexp-in-string "[\n\r\t ]+"
-			    " "
-			    (string-trim s)))
-
-(defun my/as-filename (name ext)
-  "Create a kebab-case filename called NAME with the extension EXT."
-
-  (defun space-to-dash (s)
-    "Replace all space characters in S with a single dash each."
-    (replace-regexp-in-string " +" "-" s))
-  (defun filter-alnum-and-space (s)
-    "Remove all characters from s that are not alphanumeric."
-    (replace-regexp-in-string "[^[:alnum:] ]"
-			      ""
-			      s))
-
-  (concat (space-to-dash
-	   (downcase
-	    (my/reduce-whitespace
-	     (filter-alnum-and-space name))))
-	  ext))
-
-;; Create a new markdown note file.
-(defun my/new-markdown-note (raw-title convert-to-title-case)
-  "Create a new markdown note for use with pandoc."
-  (interactive (list (read-string "Title: ")
-		     (y-or-n-p "Convert to title case? ")))
-  (let ((filename (my/as-filename raw-title ".md"))
-	(title (if convert-to-title-case
-		   (my/title-case raw-title)
-		 (my/reduce-whitespace raw-title)))
-	(date (format-time-string "%Y-%_0m-%d" (current-time)))
-	(author "Thassilo Schulze"))
-    (find-file filename)
-    (insert (concat "---\n"
-		    "title: \"" title "\"\n"
-		    "date: " date "\n"
-		    "author: \"" author "\"\n"
-		    "---\n\n"))))
-(define-key global-map (kbd "C-c m n") #'my/new-markdown-note)
 
 
 ;; Spell checker dictionaries.
@@ -411,10 +359,11 @@
   (interactive)
   (ansi-term "/usr/bin/zsh"))
 
-(provide 'init.el)
-;;; init.el ends here
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
+
+(provide 'init)
+;;; init.el ends here
 
 ; LocalWords:  melpa flyspell zsh csi usr after-init-hook ispell md
 ; LocalWords:  global-flycheck-mode mathjax paredit-mode sexpy US.UTF
