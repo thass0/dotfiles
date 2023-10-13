@@ -27,7 +27,29 @@
  ;; If there is more than one, they won't work right.
  )
 
-;; `Use-package` install.
+;; Some config inspirations
+;; https://idiomdrottning.org/bad-emacs-defaults
+;; https://tony-zorman.com/posts/emacs-potpourri.html
+
+;; Stop leaving behind files~ and #files# everywhere.
+(make-directory "~/.emacs_backups/" t)
+(make-directory "~/.emacs_autosave/" t)
+(setq auto-save-file-name-transforms '((".*" "~/.emacs_autosave/" t)))
+(setq backup-directory-alist '(("." . "~/.emacs_backups/")))
+(setq backup-by-copying t)
+
+;; Sentences end with a single space.
+(setq sentence-end-double-space nil)
+
+;; Files must end with a newline.
+(setq require-final-newline t)
+
+;; By tiling, Emacs doesn't get to decide how big it is anyways ...
+(setq frame-inhibit-implied-resize t)
+
+(setq show-trailing-whitespace t)
+
+;; `use-package` install.
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -324,7 +346,7 @@
 
 (use-package motes
   :init (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
-  :load-path ("~/.emacs.d/elisp/motes.el")
+  :load-path ("~/.emacs.d/motes.el")
   :config (setq motes-author "Thassilo Schulze")
   :bind
   ("C-c m p" . #'motes-preview)
