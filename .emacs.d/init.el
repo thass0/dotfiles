@@ -4,12 +4,18 @@
 
 ;;; Code:
 
-;; Setup melpa packages.
+
+;;;;;;;;;;;;;;
+;; Packages ;;
+;;;;;;;;;;;;;;
+
 (require 'package)
 (add-to-list 'package-archives
-             '("melpa-stable" . "https://stable.melpa.org/packages/"))
+             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (add-to-list 'package-archives
-	     '("gnu"   . "https://elpa.gnu.org/packages/"))
+             '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives
+	     '("gnu"   . "https://elpa.gnu.org/packages/") t)
 (package-initialize)
 
 (custom-set-variables
@@ -18,36 +24,19 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(exec-path-from-shell nim-mode company-lsp auctex ivy projectile yasnippet company lsp-ui lsp-mode rustic yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken flycheck ## markdown-mode rainbow-delimiters))
- '(warning-suppress-types '((comp))))
+   '(eglot esup exercism exec-path-from-shell auctex ivy yasnippet company
+	   yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package
+	   ace-window magit paredit geiser-chicken markdown-mode
+	   rainbow-delimiters))
+ '(warning-suppress-types '((comp)))
+ '(inhibit-startup-screen t)
+ '(initial-buffer-choice "/home/thasso/TEXT"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-;; Some config inspirations
-;; https://idiomdrottning.org/bad-emacs-defaults
-;; https://tony-zorman.com/posts/emacs-potpourri.html
-
-;; Stop leaving behind files~ and #files# everywhere.
-(make-directory "~/.emacs_backups/" t)
-(make-directory "~/.emacs_autosave/" t)
-(setq auto-save-file-name-transforms '((".*" "~/.emacs_autosave/" t)))
-(setq backup-directory-alist '(("." . "~/.emacs_backups/")))
-(setq backup-by-copying t)
-
-;; Sentences end with a single space.
-(setq sentence-end-double-space nil)
-
-;; Files must end with a newline.
-(setq require-final-newline t)
-
-;; By tiling, Emacs doesn't get to decide how big it is anyways ...
-(setq frame-inhibit-implied-resize t)
-
-(setq show-trailing-whitespace t)
 
 ;; `use-package` install.
 (unless (package-installed-p 'use-package)
@@ -57,6 +46,43 @@
   (setq use-package-always-ensure t
         use-package-expand-minimally t))
 
+(use-package esup
+  :ensure t
+  ;; To use MELPA Stable use ":pin melpa-stable",
+  :pin melpa)
+
+
+;;;;;;;;;;;;;
+;; Visuals ;;
+;;;;;;;;;;;;;
+
+;; Since my windows are tiled, Emacs doesn't get to decide
+;; how big it is anyways ...
+(setq frame-inhibit-implied-resize t)
+
+(use-package solarized-theme
+  :ensure t
+  :config
+  (setq solarized-use-more-italic t)
+  (setq solarized-scale-markdown-headlines t)
+  (setq x-underline-at-descent-line t)
+  ;; All settings must precede `load-theme`.
+  (load-theme 'solarized-light t))
+
+;; Permanently hide the GUI tool-bar, menu-bar and scroll-bar.
+;; They can be turned on for a specific session. E.g.: `M-x tool-bar-mode`.
+(when window-system
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  (toggle-scroll-bar -1))
+
+;; Change the font size to something readable.
+(set-face-attribute 'default nil :height 141)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shell-related configuration ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Inherit a shell's environment variables to run commands as usual.
 (use-package exec-path-from-shell
@@ -64,6 +90,17 @@
   :config
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
+
+;; Zsh shell shortcut.
+(defun zsh ()
+  "Run terminal without asking what shell to use."
+  (interactive)
+  (ansi-term "/usr/bin/zsh"))
+
+
+;;;;;;;;;;;;;;;;;
+;; Git gutters ;;
+;;;;;;;;;;;;;;;;;
 
 ;; Git gutter highlights on the side
 (use-package git-gutter
@@ -77,11 +114,15 @@
   (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Window navigation ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Switch windows using ace-window.
 (global-set-key (kbd "C-x o") 'ace-window)
 
-;; Switch from vertical to horizontal split and vice versa.
 (defun my/toggle-window-split ()
+  "Switch from vertical to horizontal split and vice versa."
   (interactive)
   (if (= (count-windows) 2)
       (let* ((this-win-buffer (window-buffer))
@@ -109,41 +150,22 @@
 (global-set-key (kbd "C-x |") #'my/toggle-window-split)
 
 
-;; Permanently hide the GUI tool-bar, menu-bar and scroll-bar.
-;; They can be turned on for a specific session. E.g.: `M-x tool-bar-mode`.
-(when window-system
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  (toggle-scroll-bar -1))
+;;;;;;;;;;;
+;; Email ;;
+;;;;;;;;;;;
+
+;; Ensure that `$HOME/.authinfo` exists for this to work.
+(setq mail-user-agent 'message-user-agent)
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-stream-type 'starttls
+      smtpmail-smtp-server "posteo.de"
+      smtpmail-smtp-service 587)
 
 
-;; Change the font size to something readable.
-(set-face-attribute 'default nil :height 190)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Language server and auto-completion ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Use the `CommitMono` font.
-(set-face-attribute 'default t :font "CommitMono")
-
-
-;; Programming and programming languages configuration.
-(add-hook 'prog-mode-hook #'display-line-numbers-mode)
-(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
-(add-hook 'prog-mode-hook #'flyspell-prog-mode)
-
-;; `electric-pair-mode` is used for non-sexpy languages.
-(dolist (hook '(c-mode-hook c++-mode-hook))
-  (add-hook hook #'electric-pair-mode))
-
-
-;; Project navigation
-(use-package projectile
-  :ensure
-  :bind (:map projectile-mode-map
-	      ("C-c p" . projectile-command-map))
-  :hook (prog-mode . projectile-mode)
-  :config
-  (setq projectile-completion-system 'ivy))
-
-;; Ivy completion mechanism for projectile.
 (use-package ivy
   :ensure
   :config
@@ -152,99 +174,27 @@
   (setq enable-recursive-minibuffers t))
 
 
-;; Rust language configuration.
-(use-package rustic
-  :ensure
-  :bind (:map rustic-mode-map
-              ("M-j" . lsp-ui-imenu)
-              ("M-?" . lsp-find-references)
-              ("C-c C-c l" . flycheck-list-errors)
-              ("C-c C-c a" . lsp-execute-code-action)
-              ("C-c C-c r" . lsp-rename)
-              ("C-c C-c q" . lsp-workspace-restart)
-              ("C-c C-c Q" . lsp-workspace-shutdown)
-              ("C-c C-c s" . lsp-rust-analyzer-status))
-  :config
-  ;; uncomment for less flashiness
-  ;; (setq lsp-eldoc-hook nil)
-  ;; (setq lsp-enable-symbol-highlighting nil)
-  ;; (setq lsp-signature-auto-activate nil)
-
-  ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t)
-  (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook)
-  (add-hook 'rustic-mode-hook #'electric-pair-mode))
-
-(defun rk/rustic-mode-hook ()
-  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
-  ;; save rust buffers that are not file visiting. Once
-  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
-  ;; no longer be necessary.
-  (when buffer-file-name
-    (setq-local buffer-save-without-query t))
-  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
-
-
-;; Nim language configuration
-(use-package nim-mode
-  :ensure
-  :config
-  ;; Make files in the nimble folder read only by default.
-  ;; This can prevent to edit them by accident.
-  (when (string-match "/\.nimble/" (or (buffer-file-name) "")) (read-only-mode 1)))
-
-;; Haskell language configuration.
-(use-package haskell-mode
-  :ensure t)
-
 (use-package eglot
   :ensure t
-  :config
-  (add-hook 'haskell-mode-hook 'eglot-ensure)
+  :hook ((haskell-mode . eglot-ensure)
+	 (c-mode . eglot-ensure)
+	 (c++-mode . eglot-ensure)
+	 (rust-mode . eglot-ensure)
+	 (lisp-mode . eglot-ensure)
+	 (emacs-lisp-mode . eglot-ensure))
   :config
   (setq-default eglot-workspace-configuration
                 '((haskell
                    (plugin
                     (stan
-                     (globalOn . :json-false)))))) ;; disable stan
+                     (globalOn . :json-false))))))  ;; disable stan
+  (define-key eglot-mode-map (kbd "C-c r") #'eglot-rename)
+  (define-key eglot-mode-map (kbd "C-c f") #'eglot-format)
+  (define-key eglot-mode-map (kbd "C-c m") #'imenu)
   :custom
-  (eglot-autoshutdown t) ;; shutdown language server after closing last file
-  (eglot-confirm-server-initiated-edits nil) ;; allow edits without confirmation
+  (eglot-autoshutdown t)  ;; shutdown language server after closing last file
+  (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
   )
-
-;; LSP configuration.
-(use-package lsp-mode
-  :ensure
-  :commands lsp
-  :custom
-  ;; what to use when checking on-save. "check" is default, I prefer clippy
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
-  (lsp-eldoc-render-all t)
-  (lsp-idle-delay 0.6)
-  ;; enable / disable the hints as you prefer:
-  (lsp-inlay-hint-enable t)
-  ;; These are optional configurations. See https://emacs-lsp.github.io/lsp-mode/page/lsp-rust-analyzer/#lsp-rust-analyzer-display-chaining-hints for a full list
-  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
-  (lsp-rust-analyzer-display-chaining-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
-  (lsp-rust-analyzer-display-closure-return-type-hints t)
-  (lsp-rust-analyzer-display-parameter-hints nil)
-  (lsp-rust-analyzer-display-reborrow-hints nil)
-  :hook ((c-mode . lsp)
-	 (c++-mode .lsp))
-  :config
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode)
-  (setq lsp-clients-clangd-args '("-j=4" "-background-index" "-log=error")))
-
-(use-package lsp-ui
-  :ensure
-  :commands lsp-ui-mode
-  :custom
-  (lsp-ui-peek-always-show t)
-  (lsp-ui-sideline-show-hover t)
-  (lsp-ui-sideline-enable nil)
-  :config
-  (add-hook 'rustic-mode-hook (lsp-ui-sideline-enable nil)))
 
 (use-package company
   :ensure
@@ -253,12 +203,12 @@
   ;; (company-begin-commands nil) ;; uncomment to disable popup
   :bind
   (:map company-active-map
-	      ("C-n". company-select-next)
-	      ("C-p". company-select-previous)
-	      ("M-<". company-select-first)
-	      ("M->". company-select-last)
-	      ("<tab>". tab-indent-or-complete)
-	      ("TAB". tab-indent-or-complete))
+	("C-n". company-select-next)
+	("C-p". company-select-previous)
+	("M-<". company-select-first)
+	("M->". company-select-last)
+	("<tab>". tab-indent-or-complete)
+	("TAB". tab-indent-or-complete))
   :hook (prog-mode . company-mode))
 
 (defun company-yasnippet-or-completion ()
@@ -295,13 +245,14 @@
   (add-hook 'prog-mode-hook 'yas-minor-mode)
   (add-hook 'text-mode-hook 'yas-minor-mode))
 
-(use-package flycheck
-  :ensure t
-  :init (global-flycheck-mode)
-  :hook (prog-mode . flycheck-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Language-specific configuration ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; `paredit-mode` is used for sexpy languages.
-(autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+(autoload 'enable-paredit-mode "paredit"
+  "Turn on pseudo-structural editing of Lisp code." t)
 (dolist (hook '(emacs-lisp-mode-hook
 		eval-expression-minibuffer-setup-hook
 		ielm-mode-hook
@@ -310,13 +261,48 @@
 		scheme-mode-hook))
   (add-hook hook #'enable-paredit-mode))
 
-
 ;; Scheme language configuration.
-;; Use Geiser.
-(add-hook 'scheme-mode-hook 'turn-on-geiser-mode)
-;; Use CHICKEN scheme.
-(setq scheme-program-name "/usr/bin/csi")
+(add-hook 'scheme-mode-hook 'turn-on-geiser-mode)  ;; Use Geiser.
+(setq scheme-program-name "/usr/bin/csi")  ;; Use CHICKEN scheme.
 
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'prog-mode-hook #'flyspell-prog-mode)
+(add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
+(add-hook 'prog-mode-hook (lambda () (set-fill-column 80)))
+
+(add-hook 'c-mode-hook #'electric-pair-mode)
+(add-hook 'c++-mode-hook #'electric-pair-mode)
+
+;; Better C comments https://emacs.stackexchange.com/a/14613.
+(defun my/prettify-c-block-comment (orig-fun &rest args)
+  "Prettify the format of C multi-line comments."
+  (let* ((first-comment-line (looking-back "/\\*\\s-*.*"))
+         (star-col-num (when first-comment-line
+                         (save-excursion
+                           (re-search-backward "/\\*")
+                           (1+ (current-column))))))
+    (apply orig-fun args)
+    (when first-comment-line
+      (save-excursion
+        (newline)
+        (dotimes (cnt star-col-num)
+          (insert " "))
+        (move-to-column star-col-num)
+        (insert "*/"))
+      (move-to-column star-col-num)	; comment this line if using bsd style
+      (insert "*")			; comment this line if using bsd style
+      ))
+  ;; Ensure one space between the asterisk and the comment
+  (when (not (looking-back " "))
+    (insert " ")))
+;; (advice-add 'c-indent-new-comment-line :around #'my/prettify-c-block-comment)
+(advice-remove 'c-indent-new-comment-line #'my/prettify-c-block-comment)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Writing in Markdown and Jekyll ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Settings to improve writing text documents.
 (defun writing ()
@@ -326,7 +312,6 @@
   (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
   (turn-on-visual-line-mode))
 
-
 ;; Markdown and plain-text configuration.
 (use-package markdown-mode
   :ensure t
@@ -334,18 +319,9 @@
   :init (setq markdown-command "pandoc --from=markdown --to=html -s --mathjax"))
 (add-hook 'markdown-mode-hook #'writing)
 
-;; Spellcheck in markdown and text mode.
-;; Use double-tap to correct word (required for touch-pads only).
-(eval-after-load "flyspell"
-  '(progn
-     (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
-     (define-key flyspell-mouse-map [mouse-3] #'undefined)))
-
-(dolist (hook '(text-mode-hook markdown-mode-hook))
-  (add-hook hook #'flyspell-mode))
-
 (use-package motes
-  :init (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
+  :init (add-to-list 'load-path
+		     (expand-file-name "elisp" user-emacs-directory))
   :load-path ("~/.emacs.d/motes.el")
   :config (setq motes-author "Thassilo Schulze")
   :bind
@@ -363,7 +339,10 @@
 (define-key global-map (kbd "C-c j") #'my/run-jekyll-serve)
 
 
-;; Spell checker dictionaries.
+;;;;;;;;;;;;;;;;;;;;
+;; Spell checking ;;
+;;;;;;;;;;;;;;;;;;;;
+
 (with-eval-after-load "ispell"
   ;; Configure default dictionary.
   (setenv "LANG" "en_US.UTF-8")
@@ -375,14 +354,72 @@
   ;; NOTE: .hunspell_personal MUST exist. Otherwise it's not used.
   (setq ispell-personal-dictionary "~/.hunspell_personal"))
 
-;; Zsh shell shortcut.
-(defun zsh ()
-  "Run terminal without asking what shell to use."
-  (interactive)
-  (ansi-term "/usr/bin/zsh"))
+;; Use double-tap to correct word (required for touch-pads only).
+(eval-after-load "flyspell"
+  '(progn
+     (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
+     (define-key flyspell-mouse-map [mouse-3] #'undefined)))
+
+(dolist (hook '(text-mode-hook markdown-mode-hook))
+  (add-hook hook #'flyspell-mode))
+
+
+;;;;;;;;;;;;;;;;;;;
+;; Miscellaneous ;;
+;;;;;;;;;;;;;;;;;;;
 
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
+
+;; Some configuration inspired by:
+;; https://idiomdrottning.org/bad-emacs-defaults
+;; https://tony-zorman.com/posts/emacs-potpourri.html
+
+;; Stop leaving behind files~ and #files# everywhere.
+(make-directory "~/.emacs_backups/" t)
+(make-directory "~/.emacs_autosave/" t)
+(setq auto-save-file-name-transforms '((".*" "~/.emacs_autosave/" t)))
+(setq backup-directory-alist '(("." . "~/.emacs_backups/")))
+(setq backup-by-copying t)
+
+;; Files must end with a newline.
+(setq require-final-newline t)
+
+(setq show-trailing-whitespace t)
+
+(use-package exercism
+  :ensure t
+  :bind ("C-c e" . #'exercism)
+  :config
+  (setq exercism-display-tests-after-run t))
+
+(mouse-wheel-mode -1)
+(global-set-key [wheel-up] 'ignore)
+(global-set-key [double-wheel-up] 'ignore)
+(global-set-key [triple-wheel-up] 'ignore)
+
+(global-set-key [wheel-down] 'ignore)
+(global-set-key [double-wheel-down] 'ignore)
+(global-set-key [triple-wheel-down] 'ignore)
+
+(global-set-key [wheel-left] 'ignore)
+(global-set-key [double-wheel-left] 'ignore)
+(global-set-key [triple-wheel-left] 'ignore)
+
+(global-set-key [wheel-right] 'ignore)
+(global-set-key [double-wheel-right] 'ignore)
+(global-set-key [triple-wheel-right] 'ignore)
+
+(global-set-key [mouse-4] 'ignore)
+(global-set-key [double-mouse-4] 'ignore)
+(global-set-key [triple-mouse-4] 'ignore)
+
+(global-set-key [mouse-5] 'ignore)
+(global-set-key [double-mouse-5] 'ignore)
+(global-set-key [triple-mouse-5] 'ignore)
+
+;; Blink the cursor forever.
+(setq blink-cursor-blinks 0)
 
 (provide 'init)
 ;;; init.el ends here

@@ -1,25 +1,43 @@
 ;;; motes --- Wrappers around motes scripts for handling Markdown notes.
 
 ;;; Commentary:
+;;;
 ;;; Most of the functions provided here simply wrap the motes-* scripts
 ;;; for use from inside Emacs.  Make sure you have them installed and they
 ;;; are part of the PATH used by Emacs when launching processes.
+;;;
 ;;; exec-path-from-shell is used to load environment variables from your
-;;; shell.  You can use it to load the shell's PATH environment variable
-;;; into Emacs, too.
+;;; shell.  It's used here to get value of the MOTES_URL environment variable
+;;; from your shell. This environment variable must be set for motes to be
+;;; configured correctly.
 ;;;
-;;; You could bind the functions from this file like this:
+;;; `motes-new` uses the `motes-author` variable to fill in the author's name
+;;; when creating a new note.  The author's name is not an environment variable
+;;; because it is only used inside of this Emacs wrapper around motes.
 ;;;
-;;; (use-package 'motes
+;;; If you store this file inside the `~/.emacs.d/elisp` directory, a full
+;;; configuration might look like this:
+;;;
+;;; ;; Used by motes-share to read environment variables.
+;;; ;; See https://github.com/purcell/exec-path-from-shell for more info.
+;;; (use-package exec-path-from-shell
+;;;   :ensure t)
+;;;
+;;; (use-package motes
+;;;   :init (add-to-list 'load-path
+;;; 		     (expand-file-name "elisp" user-emacs-directory))
+;;;   :load-path ("~/.emacs.d/motes.el")
+;;;   :config (setq motes-author "Your Name")  ;; <- Change this!
 ;;;   :bind
 ;;;   ("C-c m p" . #'motes-preview)
 ;;;   ("C-c m s" . #'motes-share)
 ;;;   ("C-c m n" . #'motes-new))
 ;;;
 
+
 ;;; Code:
 
-(defvar motes-author "Unknown" "The name of the author.  Used when creating new notes.")
+(defvar motes-author "Unknown" "The name of the author.  Used to create new notes.")
 
 (defun motes-preview ()
   "Preview a compiled HTML version of the given Markdown buffer."
@@ -48,7 +66,7 @@
       (message "Cannot share note because this buffer is not a '.md' file."))))
 
 (defun motes-new (raw-title convert-to-title-case)
-  "Create a new Markdown note for use with pandoc.  RAW-TITLE used as the title of the note and the file.  It's converted to title case in the note if CONVERT-TO-TITLE-CASE is true."
+  "Create a new note.  RAW-TITLE is converted to title case if CONVERT-TO-TITLE-CASE is true."
   (interactive (list (read-string "Title: ")
 		     (y-or-n-p "Convert to title case? ")))
 
