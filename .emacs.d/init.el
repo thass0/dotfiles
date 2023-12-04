@@ -271,8 +271,8 @@
 (add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
 (add-hook 'prog-mode-hook (lambda () (set-fill-column 80)))
 
-(add-hook 'c-mode-hook #'electric-pair-mode)
-(add-hook 'c++-mode-hook #'electric-pair-mode)
+(dolist (hook '(c-mode-hook c++-mode-hook web-mode-hook rust-mode-hook))
+  (add-hook hook #'electric-pair-mode))
 
 ;; Better C comments https://emacs.stackexchange.com/a/14613.
 (defun my/prettify-c-block-comment (orig-fun &rest args)
@@ -419,7 +419,53 @@
 (global-set-key [triple-mouse-5] 'ignore)
 
 ;; Blink the cursor forever.
-(setq blink-cursor-blinks 0)
+;; (setq blink-cursor-blinks 0)
+
+(defun has-logged-in-last-hour ()
+  "Check if the last login message is from less than an hour ago"
+  (defun find-last-line-with-prefix (file prefix)
+    "Find the last line in FILE that starts with PREFIX"
+    (let ((pat (concat "^" prefix)))
+      (with-temp-buffer
+	(insert-file-contents file)
+	(goto-char (point-max))
+	(while (and (not (bobp))		; beginning-of-buffer-prediacte
+		    (not (looking-at-p pat)))
+	  (forward-line -1))
+	(if (looking-at-p pat)
+	    (buffer-substring-no-properties
+	     (line-beginning-position)
+	     (line-end-position))
+	  nil))))
+
+  (defun time-string-to-list-timestamp (s)
+    (time-convert (encode-time (parse-time-string s)) 'list))
+
+  (defun seconds-diff (t1 t2)
+    (time-convert
+     (time-subtract t1 t2)
+     'integer))
+
+  (let ((login-msg-raw (find-last-line-with-prefix "/home/thasso/TEXT" ":: ")))
+    (if login-msg-raw
+	(let ((login-msg (substring login-msg-raw 3)))
+	  (if (string-equal "new login"
+			    (cadr (split-string login-msg " - ")))
+	      (let ((last-login (time-string-to-list-timestamp
+				 (car (string-split login-msg " - "))))
+		    (now (current-time)))
+		(< (seconds-diff now last-login) 3600))
+	    nil)))))
+
+(defun login-to-text ()
+  "Every time Emacs is started, write a login message to ~/TEXT"
+  (with-current-buffer (find-file-noselect "/home/thasso/TEXT")
+    (goto-char (point-max))
+    (if (not (has-logged-in-last-hour))
+	(insert "\n:: " (format-time-string "%Y-%m-%d %T") " - new login\n\n"))
+    (save-buffer)))
+
+(add-hook 'emacs-startup-hook 'login-to-text)
 
 (provide 'init)
 ;;; init.el ends here
