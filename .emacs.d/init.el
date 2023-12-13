@@ -1,9 +1,10 @@
 ;;; Emacs configuration.
-
 ;;; Commentary:
 
 ;;; Code:
 
+(defvar me "Thassilo Schulze"
+  "This is the user of this configuration.")
 
 ;;;;;;;;;;;;;;
 ;; Packages ;;
@@ -23,14 +24,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(eglot esup exercism exec-path-from-shell auctex ivy yasnippet company
-	   yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package
-	   ace-window magit paredit geiser-chicken markdown-mode
-	   rainbow-delimiters))
- '(warning-suppress-types '((comp)))
+ '(custom-safe-themes
+   '("fc608d4c9f476ad1da7f07f7d19cc392ec0fb61f77f7236f2b6b42ae95801a62" default))
  '(inhibit-startup-screen t)
- '(initial-buffer-choice "/home/thasso/TEXT"))
+ '(initial-buffer-choice "/home/thasso/TEXT")
+ '(package-selected-packages
+   '(web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
+ '(warning-suppress-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -60,14 +60,33 @@
 ;; how big it is anyways ...
 (setq frame-inhibit-implied-resize t)
 
-(use-package solarized-theme
+;;; For packaged versions which must use `require'.
+(use-package modus-themes
   :ensure t
   :config
-  (setq solarized-use-more-italic t)
-  (setq solarized-scale-markdown-headlines t)
-  (setq x-underline-at-descent-line t)
-  ;; All settings must precede `load-theme`.
-  (load-theme 'solarized-light t))
+  ;; Add all your customizations prior to loading the themes
+  (setq modus-themes-italic-constructs t
+        modus-themes-bold-constructs t
+	modus-themes-mixed-fonts t)
+
+  ;; Maybe define some palette overrides, such as by using our presets
+  (setq modus-themes-common-palette-overrides
+        modus-themes-preset-overrides-intense)
+
+  ;; Load the theme of your choice.
+  (load-theme 'modus-operandi)
+
+  (define-key global-map (kbd "<f5>") #'modus-themes-toggle))
+
+
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :config
+;;   (setq solarized-use-more-italic t)
+;;   (setq solarized-scale-markdown-headlines t)
+;;   (setq x-underline-at-descent-line t)
+;;   ;; All settings must precede `load-theme`.
+;;   (load-theme 'solarized-light t))
 
 ;; Permanently hide the GUI tool-bar, menu-bar and scroll-bar.
 ;; They can be turned on for a specific session. E.g.: `M-x tool-bar-mode`.
@@ -299,6 +318,18 @@
 ;; (advice-add 'c-indent-new-comment-line :around #'my/prettify-c-block-comment)
 (advice-remove 'c-indent-new-comment-line #'my/prettify-c-block-comment)
 
+(use-package web-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (setq web-mode-enable-auto-closing t))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Writing in Markdown and Jekyll ;;
@@ -323,7 +354,7 @@
   :init (add-to-list 'load-path
 		     (expand-file-name "elisp" user-emacs-directory))
   :load-path ("~/.emacs.d/motes.el")
-  :config (setq motes-author "Thassilo Schulze")
+  :config (setq motes-author me)
   :bind
   ("C-c m p" . #'motes-preview)
   ("C-c m s" . #'motes-share)
@@ -462,10 +493,23 @@
   (with-current-buffer (find-file-noselect "/home/thasso/TEXT")
     (goto-char (point-max))
     (if (not (has-logged-in-last-hour))
-	(insert "\n:: " (format-time-string "%Y-%m-%d %T") " - new login\n\n"))
+	(insert "\n:: " (format-time-string "%Y-%m-%d %T") " - new login\n"))
     (save-buffer)))
 
 (add-hook 'emacs-startup-hook 'login-to-text)
+
+(defun insert-copyright ()
+  "Inserts a copyright message as a comment in the current buffer."
+  (interactive)
+  (let ((copyright-msg
+         (concat "Copyright (c) " me " " (format-time-string "%Y"))))
+    (save-excursion
+      ;; (beginning-of-line)
+      (let ((msg-start (point)))
+	(insert copyright-msg)
+	;; See https://irreal.org/blog/?p=371 for why
+	;; the last argument is 1.
+	(comment-region msg-start (point-at-eol) 1)))))
 
 (provide 'init)
 ;;; init.el ends here
