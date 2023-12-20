@@ -29,7 +29,7 @@
  '(inhibit-startup-screen t)
  '(initial-buffer-choice "/home/thasso/TEXT")
  '(package-selected-packages
-   '(web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
+   '(hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
  '(warning-suppress-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -97,6 +97,21 @@
 
 ;; Change the font size to something readable.
 (set-face-attribute 'default nil :height 141)
+
+;; Highlight TODO, FIXME, etc.
+(use-package hl-todo
+  :ensure t
+  :config
+  (global-hl-todo-mode 1)
+  (setq hl-todo-keyword-faces
+	'(("TODO"   . "#ff8000")
+          ("FIXME"  . "#ff4800")
+          ("DEBUG"  . "#a020f0")))
+  ;; For some reason using :bind broke the (global-hl-todo-mode 1).
+  (keymap-set hl-todo-mode-map "C-c p" #'hl-todo-previous)
+  (keymap-set hl-todo-mode-map "C-c n" #'hl-todo-next)
+  (keymap-set hl-todo-mode-map "C-c o" #'hl-todo-occur)
+  (keymap-set hl-todo-mode-map "C-c i" #'hl-todo-insert))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -200,7 +215,8 @@
 	 (c++-mode . eglot-ensure)
 	 (rust-mode . eglot-ensure)
 	 (lisp-mode . eglot-ensure)
-	 (emacs-lisp-mode . eglot-ensure))
+	 (emacs-lisp-mode . eglot-ensure)
+	 (onyx-mode . eglot-ensure))
   :config
   (setq-default eglot-workspace-configuration
                 '((haskell
@@ -284,13 +300,17 @@
 (add-hook 'scheme-mode-hook 'turn-on-geiser-mode)  ;; Use Geiser.
 (setq scheme-program-name "/usr/bin/csi")  ;; Use CHICKEN scheme.
 
+;; Onyx language configuration.
+(use-package onyx-mode
+  :load-path "elisp/")
+
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook #'flyspell-prog-mode)
 (add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
 (add-hook 'prog-mode-hook (lambda () (set-fill-column 80)))
 
-(dolist (hook '(c-mode-hook c++-mode-hook web-mode-hook rust-mode-hook))
+(dolist (hook '(c-mode-hook c++-mode-hook web-mode-hook rust-mode-hook haskell-mode-hook onyx-mode-hook))
   (add-hook hook #'electric-pair-mode))
 
 ;; Better C comments https://emacs.stackexchange.com/a/14613.
@@ -351,9 +371,7 @@
 (add-hook 'markdown-mode-hook #'writing)
 
 (use-package motes
-  :init (add-to-list 'load-path
-		     (expand-file-name "elisp" user-emacs-directory))
-  :load-path ("~/.emacs.d/motes.el")
+  :load-path "elisp/"
   :config (setq motes-author me)
   :bind
   ("C-c m p" . #'motes-preview)
@@ -368,6 +386,18 @@
       (async-shell-command (concat "jekyll serve " flags))
     (message "There is no _config.yml in this directory. Without it, this directory cannot be a Jekyll root.")))
 (define-key global-map (kbd "C-c j") #'my/run-jekyll-serve)
+
+(defun highlight-text-comments ()
+  "Highlight comments inside brackets inserted inline into text documents"
+  (interactive)
+  (hi-lock-mode 1)
+  (highlight-regexp "\\[[^\\[]*\\]" 'hi-yellow))
+(defun un-highlight-text-comments ()
+  "Disable highlighting inline comments in text"
+  (interactive)
+  (hi-lock-mode 0))
+(define-key global-map (kbd "C-c m h") #'highlight-text-comments)
+(define-key global-map (kbd "C-c m u") #'un-highlight-text-comments)
 
 
 ;;;;;;;;;;;;;;;;;;;;
