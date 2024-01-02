@@ -148,4 +148,9 @@ function ls() {
   fi
 }
 
+# Function to call into the $EDITOR editor.
+function edit() {
+	command "$EDITOR" $@
+}
+
 export BAT_THEME="ansi"

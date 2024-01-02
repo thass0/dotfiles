@@ -13,9 +13,9 @@ export PATH
 # error-message-error0308010cdigital-envelope-routinesunsupported
 #
 # This leaves open a security hole. Only used it locally!
-export NODE_OPTIONS=--openssl-legacy-provider
+# export NODE_OPTIONS=--openssl-legacy-provider
 
 # URL for motes-share.
 export MOTES_URL="https://thassilo.work"
 
-export EDITOR="nano"
+export EDITOR="vim"
