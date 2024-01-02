@@ -29,7 +29,7 @@
  '(inhibit-startup-screen t)
  '(initial-buffer-choice "/home/thasso/TEXT")
  '(package-selected-packages
-   '(hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter-fringe git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
+   '(nlinum treemacs-magit treemacs-icons-dired hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
  '(warning-suppress-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -78,6 +78,18 @@
 
   (define-key global-map (kbd "<f5>") #'modus-themes-toggle))
 
+(use-package nlinum
+  :ensure t
+  :config
+  ;; Preset `nlinum-format' for minimum width.
+  (defun my-nlinum-mode-hook ()
+    (when nlinum-mode
+      (setq-local nlinum-format
+                  (concat "%" (number-to-string
+                               ;; Guesstimate number of buffer lines.
+                               (ceiling (log (max 1 (/ (buffer-size) 80)) 10)))
+                          "d"))))
+  (add-hook 'nlinum-mode-hook #'my-nlinum-mode-hook))
 
 ;; (use-package solarized-theme
 ;;   :ensure t
@@ -96,7 +108,7 @@
   (toggle-scroll-bar -1))
 
 ;; Change the font size to something readable.
-(set-face-attribute 'default nil :height 141)
+(set-face-attribute 'default nil :height 130)
 
 ;; Highlight TODO, FIXME, etc.
 (use-package hl-todo
@@ -104,9 +116,11 @@
   :config
   (global-hl-todo-mode 1)
   (setq hl-todo-keyword-faces
-	'(("TODO"   . "#ff8000")
-          ("FIXME"  . "#ff4800")
-          ("DEBUG"  . "#a020f0")))
+	'(("TODO"  . "#ff8000")
+          ("FIXME" . "#ff4800")
+	  ("NOTE"  . "#6bd600")
+	  ("NOTES"  . "#6bd600")
+          ("DEBUG" . "#a020f0")))
   ;; For some reason using :bind broke the (global-hl-todo-mode 1).
   (keymap-set hl-todo-mode-map "C-c p" #'hl-todo-previous)
   (keymap-set hl-todo-mode-map "C-c n" #'hl-todo-next)
@@ -141,11 +155,6 @@
   :hook (prog-mode . git-gutter-mode)
   :config
   (setq git-gutter:update-interval 0.02))
-(use-package git-gutter-fringe
-  :config
-  (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
-  (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
-  (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -215,8 +224,7 @@
 	 (c++-mode . eglot-ensure)
 	 (rust-mode . eglot-ensure)
 	 (lisp-mode . eglot-ensure)
-	 (emacs-lisp-mode . eglot-ensure)
-	 (onyx-mode . eglot-ensure))
+	 (emacs-lisp-mode . eglot-ensure))
   :config
   (setq-default eglot-workspace-configuration
                 '((haskell
@@ -300,17 +308,13 @@
 (add-hook 'scheme-mode-hook 'turn-on-geiser-mode)  ;; Use Geiser.
 (setq scheme-program-name "/usr/bin/csi")  ;; Use CHICKEN scheme.
 
-;; Onyx language configuration.
-(use-package onyx-mode
-  :load-path "elisp/")
-
-(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(add-hook 'prog-mode-hook #'nlinum-mode)
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook #'flyspell-prog-mode)
 (add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
 (add-hook 'prog-mode-hook (lambda () (set-fill-column 80)))
 
-(dolist (hook '(c-mode-hook c++-mode-hook web-mode-hook rust-mode-hook haskell-mode-hook onyx-mode-hook))
+(dolist (hook '(c-mode-hook c++-mode-hook web-mode-hook rust-mode-hook haskell-mode-hook))
   (add-hook hook #'electric-pair-mode))
 
 ;; Better C comments https://emacs.stackexchange.com/a/14613.
@@ -351,9 +355,131 @@
   (setq web-mode-enable-auto-closing t))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; Project management ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs (if treemacs-python-executable 3 0)
+          treemacs-deferred-git-apply-delay        0.5
+          treemacs-directory-name-transformer      #'identity
+          treemacs-display-in-side-window          t
+          treemacs-eldoc-display                   'simple
+          treemacs-file-event-delay                2000
+          treemacs-file-extension-regex            treemacs-last-period-regex-value
+          treemacs-file-follow-delay               0.2
+          treemacs-file-name-transformer           #'identity
+          treemacs-follow-after-init               t
+          treemacs-expand-after-init               t
+          treemacs-find-workspace-method           'find-for-file-or-pick-first
+          treemacs-git-command-pipe                ""
+          treemacs-goto-tag-strategy               'refetch-index
+          treemacs-header-scroll-indicators        '(nil . "^^^^^^")
+          treemacs-hide-dot-git-directory          t
+          treemacs-indentation                     2
+          treemacs-indentation-string              " "
+          treemacs-is-never-other-window           nil
+          treemacs-max-git-entries                 5000
+          treemacs-missing-project-action          'ask
+          treemacs-move-forward-on-expand          nil
+          treemacs-no-png-images                   nil
+          treemacs-no-delete-other-windows         t
+          treemacs-project-follow-cleanup          nil
+          treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                        'left
+          treemacs-read-string-input               'from-child-frame
+          treemacs-recenter-distance               0.1
+          treemacs-recenter-after-file-follow      nil
+          treemacs-recenter-after-tag-follow       nil
+          treemacs-recenter-after-project-jump     'always
+          treemacs-recenter-after-project-expand   'on-distance
+          treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+          treemacs-project-follow-into-home        nil
+          treemacs-show-cursor                     nil
+          treemacs-show-hidden-files               t
+          treemacs-silent-filewatch                nil
+          treemacs-silent-refresh                  nil
+          treemacs-sorting                         'alphabetic-asc
+          treemacs-select-when-already-in-treemacs 'move-back
+          treemacs-space-between-root-nodes        t
+          treemacs-tag-follow-cleanup              t
+          treemacs-tag-follow-delay                1.5
+          treemacs-text-scale                      nil
+          treemacs-user-mode-line-format           nil
+          treemacs-user-header-line-format         nil
+          treemacs-wide-toggle-width               70
+          treemacs-width                           35
+          treemacs-width-increment                 1
+          treemacs-width-is-initially-locked       t
+          treemacs-workspace-switch-cleanup        nil)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode 'always)
+    (when treemacs-python-executable
+      (treemacs-git-commit-diff-mode t))
+
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple)))
+
+    (treemacs-hide-gitignored-files-mode nil))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-c t 1"   . treemacs-delete-other-windows)
+        ("C-c t t"     . treemacs)
+        ("C-c t d"   . treemacs-select-directory)
+        ("C-c t B"   . treemacs-bookmark)
+        ("C-c t C-t" . treemacs-find-file)
+        ("C-c t M-t" . treemacs-find-tag)))
+
+;;; Better icons in `dired` buffers.
+(use-package treemacs-icons-dired
+  :hook (dired-mode . treemacs-icons-dired-enable-once)
+  :ensure t)
+
+;;; Better magit integration.
+(use-package treemacs-magit
+  :after (treemacs magit)
+  :ensure t)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Writing in Markdown and Jekyll ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun highlight-text-comments ()
+  "Highlight comments inside brackets inserted inline into text documents"
+  (interactive)
+  (hi-lock-mode 1)
+  (highlight-regexp "\\[[^\\[]*\\]" 'hi-yellow))
+(defun highlight-text-highlights ()
+  "Highlight highlighted text inside pluses inserted inline into text documents"
+  (interactive)
+  (hi-lock-mode 1)
+  (highlight-regexp "\\+[^\\+]*\\+" 'hi-pink))
+(defun un-highlight-text ()
+  "Disable highlighting in text"
+  (interactive)
+  (hi-lock-mode 0))
+(define-key global-map (kbd "C-c m c") #'highlight-text-comments)
+(define-key global-map (kbd "C-c m h") #'highlight-text-highlights)
+(define-key global-map (kbd "C-c m u") #'un-highlight-text-comments)
 
 ;; Settings to improve writing text documents.
 (defun writing ()
@@ -361,7 +487,9 @@
   ;; Visual line mode and visual column mode for text.
   (setq-default visual-fill-column-center-text t)
   (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
-  (turn-on-visual-line-mode))
+  (turn-on-visual-line-mode)
+  (highlight-text-comments)
+  (highlight-text-highlights))
 
 ;; Markdown and plain-text configuration.
 (use-package markdown-mode
@@ -386,18 +514,6 @@
       (async-shell-command (concat "jekyll serve " flags))
     (message "There is no _config.yml in this directory. Without it, this directory cannot be a Jekyll root.")))
 (define-key global-map (kbd "C-c j") #'my/run-jekyll-serve)
-
-(defun highlight-text-comments ()
-  "Highlight comments inside brackets inserted inline into text documents"
-  (interactive)
-  (hi-lock-mode 1)
-  (highlight-regexp "\\[[^\\[]*\\]" 'hi-yellow))
-(defun un-highlight-text-comments ()
-  "Disable highlighting inline comments in text"
-  (interactive)
-  (hi-lock-mode 0))
-(define-key global-map (kbd "C-c m h") #'highlight-text-comments)
-(define-key global-map (kbd "C-c m u") #'un-highlight-text-comments)
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -540,6 +656,8 @@
 	;; See https://irreal.org/blog/?p=371 for why
 	;; the last argument is 1.
 	(comment-region msg-start (point-at-eol) 1)))))
+
+(define-key global-map (kbd "C-c ;") #'comment-box)
 
 (provide 'init)
 ;;; init.el ends here
