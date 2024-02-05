@@ -391,20 +391,47 @@ endif
 
 call plug#begin()  " Default directory in ~/.vim/plugged
 
-Plug 'rust-lang/rust.vim'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'jiangmiao/auto-pairs'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+
+Plug 'neovimhaskell/haskell-vim'
+Plug 'rust-lang/rust.vim'
 
 " Color schemes
 Plug 'nlknguyen/papercolor-theme'
 Plug 'catppuccin/nvim'
 Plug 'sainnhe/everforest'
+Plug 'vim-airline/vim-airline'
 
 call plug#end()
 
 let g:everforest_background = 'hard'
 colorscheme everforest
 
+let g:airline_theme = 'everforest'
+let g:airline_powerline_fonts = 1
+
+" Haskell indentation
+let g:haskell_indent_if = 2
+let g:haskell_indent_case = 2
+let g:haskell_indent_let = 1
+let g:haskell_indent_where = 6
+let g:haskell_indent_before_where = 2
+let g:haskell_indent_after_bare_where = 2
+let g:haskell_indent_do = 3
+let g:haskell_indent_in = 1
+let g:haskell_indent_guard = 2
+let g:haskell_indent_case_alternative = 1
+
+" Haskell code should indent by two spaces by default.
+autocmd FileType haskell setlocal shiftwidth=2 tabstop=2
+
+" Disable coc.nvim in Markdown.
+autocmd FileType markdown let b:coc_suggest_disable = 1
+
+""""""""""""
+" Snippets "
+""""""""""""
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Spell checking (must come after color scheme configuration)
