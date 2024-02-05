@@ -8,7 +8,9 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="lambda"
+# ZSH_THEME="lambda"
+ZSH_THEME="daveverwer"
+ZSH_THEME="cypher"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -153,7 +155,7 @@ function edit() {
 	command "$EDITOR" $@
 }
 
-export BAT_THEME="ansi"
+# Typing xdg-open breaks my hand ...
+alias open="xdg-open"
 
-# Remind me of the value of life ...
-(( RANDOM%7 == 0 )) && terminal_sunday.sh 2005-11-16 thasso
+export BAT_THEME="ansi"
