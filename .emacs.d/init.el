@@ -26,8 +26,8 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("fc608d4c9f476ad1da7f07f7d19cc392ec0fb61f77f7236f2b6b42ae95801a62" default))
- '(inhibit-startup-screen t)
- '(initial-buffer-choice "/home/thasso/TEXT")
+ ;; '(inhibit-startup-screen t)
+ ;; '(initial-buffer-choice "/home/thasso/TEXT")
  '(package-selected-packages
    '(nlinum treemacs-magit hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
  '(warning-suppress-types '((comp))))
@@ -52,13 +52,9 @@
   :pin melpa)
 
 
-;;;;;;;;;;;;;
-;; Visuals ;;
-;;;;;;;;;;;;;
-
-;; Since my windows are tiled, Emacs doesn't get to decide
-;; how big it is anyways ...
-(setq frame-inhibit-implied-resize t)
+;;;;;;;;;;;;;;;;;;;
+;; Extra visuals ;;
+;;;;;;;;;;;;;;;;;;;
 
 ;;; For packaged versions which must use `require'.
 (use-package modus-themes
@@ -99,16 +95,6 @@
 ;;   (setq x-underline-at-descent-line t)
 ;;   ;; All settings must precede `load-theme`.
 ;;   (load-theme 'solarized-light t))
-
-;; Permanently hide the GUI tool-bar, menu-bar and scroll-bar.
-;; They can be turned on for a specific session. E.g.: `M-x tool-bar-mode`.
-(when window-system
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  (toggle-scroll-bar -1))
-
-;; Change the font size to something readable.
-(set-face-attribute 'default nil :height 130)
 
 ;; Highlight TODO, FIXME, etc.
 (use-package hl-todo
@@ -214,7 +200,7 @@
   :config
   (ivy-mode)
   (setq ivy-use-virtual-buffers t)
-  (seqt ivy-re-builders-alist '((t . ivy--regex-ignore-order)))
+  (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order)))
   (setq enable-recursive-minibuffers t))
 
 
