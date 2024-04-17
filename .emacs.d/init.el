@@ -3,7 +3,7 @@
 
 ;;; Code:
 
-(defvar me "Thassilo Schulze"
+(defvar me "Thassilo"
   "This is the user of this configuration.")
 
 ;;;;;;;;;;;;;;
@@ -26,10 +26,8 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("fc608d4c9f476ad1da7f07f7d19cc392ec0fb61f77f7236f2b6b42ae95801a62" default))
- ;; '(inhibit-startup-screen t)
- ;; '(initial-buffer-choice "/home/thasso/TEXT")
  '(package-selected-packages
-   '(nlinum treemacs-magit hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column git-gutter use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
+   '(ligature nlinum treemacs-magit hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
  '(warning-suppress-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -56,6 +54,8 @@
 ;; Extra visuals ;;
 ;;;;;;;;;;;;;;;;;;;
 
+(setq-default indent-tabs-mode nil)     ; Important!
+
 ;;; For packaged versions which must use `require'.
 (use-package modus-themes
   :ensure t
@@ -73,6 +73,85 @@
   (load-theme 'modus-operandi)
 
   (define-key global-map (kbd "<f5>") #'modus-themes-toggle))
+
+;; (use-package almost-mono-themes
+;;   :config
+;;   ;; (load-theme 'almost-mono-black t)
+;;   ;; (load-theme 'almost-mono-gray t)
+;;   ;; (load-theme 'almost-mono-cream t)
+;;   (load-theme 'almost-mono-white t))
+
+(use-package ligature
+  :ensure t
+  :load-path "path-to-ligature-repo"
+  :config
+  ;; Enable the "www" ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable traditional ligature support in eww-mode, if the
+  ;; `variable-pitch' face supports it
+  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+  ;; Enable all Cascadia and Fira Code ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode
+                          '(;; == === ==== => =| =>>=>=|=>==>> ==< =/=//=// =~
+                            ;; =:= =!=
+                            ("=" (rx (+ (or ">" "<" "|" "/" "~" ":" "!" "="))))
+                            ;; ;; ;;;
+                            (";" (rx (+ ";")))
+                            ;; && &&&
+                            ("&" (rx (+ "&")))
+                            ;; !! !!! !. !: !!. != !== !~
+                            ("!" (rx (+ (or "=" "!" "\." ":" "~"))))
+                            ;; ?? ??? ?:  ?=  ?.
+                            ("?" (rx (or ":" "=" "\." (+ "?"))))
+                            ;; %% %%%
+                            ("%" (rx (+ "%")))
+                            ;; |> ||> |||> ||||> |] |} || ||| |-> ||-||
+                            ;; |->>-||-<<-| |- |== ||=||
+                            ;; |==>>==<<==<=>==//==/=!==:===>
+                            ("|" (rx (+ (or ">" "<" "|" "/" ":" "!" "}" "\]"
+                                            "-" "=" ))))
+                            ;; \\ \\\ \/
+                            ("\\" (rx (or "/" (+ "\\"))))
+                            ;; ++ +++ ++++ +>
+                            ("+" (rx (or ">" (+ "+"))))
+                            ;; :: ::: :::: :> :< := :// ::=
+                            (":" (rx (or ">" "<" "=" "//" ":=" (+ ":"))))
+                            ;; // /// //// /\ /* /> /===:===!=//===>>==>==/
+                            ("/" (rx (+ (or ">"  "<" "|" "/" "\\" "\*" ":" "!"
+                                            "="))))
+                            ;; .. ... .... .= .- .? ..= ..<
+                            ("\." (rx (or "=" "-" "\?" "\.=" "\.<" (+ "\."))))
+                            ;; -- --- ---- -~ -> ->> -| -|->-->>->--<<-|
+                            ("-" (rx (+ (or ">" "<" "|" "~" "-"))))
+                            ;; *> */ *)  ** *** ****
+                            ("*" (rx (or ">" "/" ")" (+ "*"))))
+                            ;; www wwww
+                            ("w" (rx (+ "w")))
+                            ;; <> <!-- <|> <: <~ <~> <~~ <+ <* <$ </  <+> <*>
+                            ;; <$> </> <|  <||  <||| <|||| <- <-| <-<<-|-> <->>
+                            ;; <<-> <= <=> <<==<<==>=|=>==/==//=!==:=>
+                            ;; << <<< <<<<
+                            ("<" (rx (+ (or "\+" "\*" "\$" "<" ">" ":" "~"  "!"
+                                            "-"  "/" "|" "="))))
+                            ;; >: >- >>- >--|-> >>-|-> >= >== >>== >=|=:=>>
+                            ;; >> >>> >>>>
+                            (">" (rx (+ (or ">" "<" "|" "/" ":" "=" "-"))))
+                            ;; #: #= #! #( #? #[ #{ #_ #_( ## ### #####
+                            ("#" (rx (or ":" "=" "!" "(" "\?" "\[" "{" "_(" "_"
+					 (+ "#"))))
+                            ;; ~~ ~~~ ~=  ~-  ~@ ~> ~~>
+                            ("~" (rx (or ">" "=" "-" "@" "~>" (+ "~"))))
+                            ;; __ ___ ____ _|_ __|____|_
+                            ("_" (rx (+ (or "_" "|"))))
+                            ;; Fira code: 0xFF 0x12
+                            ("0" (rx (and "x" (+ (in "A-F" "a-f" "0-9")))))
+                            ;; Fira code:
+                            "Fl"  "Tl"  "fi"  "fj"  "fl"  "ft"
+                            ;; The few not covered by the regexps.
+                            "{|"  "[|"  "]#"  "(*"  "}#"  "$>"  "^="))
+  ;; Enables ligature checks globally in all buffers. You can also do it
+  ;; per mode with `ligature-mode'.
+  (global-ligature-mode t))
 
 (use-package nlinum
   :ensure t
@@ -130,18 +209,6 @@
   "Run terminal without asking what shell to use."
   (interactive)
   (ansi-term "/usr/bin/zsh"))
-
-
-;;;;;;;;;;;;;;;;;
-;; Git gutters ;;
-;;;;;;;;;;;;;;;;;
-
-;; Git gutter highlights on the side
-(use-package git-gutter
-  :hook (prog-mode . git-gutter-mode)
-  :config
-  (setq git-gutter:update-interval 0.02))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window navigation ;;
@@ -240,6 +307,8 @@
 	("<tab>". tab-indent-or-complete)
 	("TAB". tab-indent-or-complete))
   :hook (prog-mode . company-mode))
+
+(add-hook 'c-mode-hook (lambda () (c-toggle-comment-style -1)))
 
 (defun company-yasnippet-or-completion ()
   (interactive)
@@ -468,6 +537,26 @@
 ;;;;;;;;;;;;;;;;;;;
 ;; Miscellaneous ;;
 ;;;;;;;;;;;;;;;;;;;
+
+;;; Garbage collection only in the case that the Emacs is on
+;;; idle for 15s. That means, garbage collection happens only
+;;; if the user is doing something different than coding.
+;;; See https://akrl.sdf.org/#orgc15a10d.
+(defmacro k-time (&rest body)
+  "Measure and return the time it takes evaluating BODY."
+  `(let ((time (current-time)))
+     ,@body
+     (float-time (time-since time))))
+
+;; Set garbage collection threshold to 1GB.
+(setq gc-cons-threshold #x40000000)
+
+;; When idle for 15sec run the GC no matter what.
+(defvar k-gc-timer
+  (run-with-idle-timer 15 t
+                       (lambda ()
+                         (message "Garbage Collector has run for %.06fsec"
+                                  (k-time (garbage-collect))))))
 
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
