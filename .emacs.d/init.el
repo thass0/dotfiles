@@ -69,6 +69,8 @@
 (use-package switch-window
   :ensure t
   :config
+  (setq switch-window-image-directory "~/.emacs.d/switch-window-label-images")
+  (setq switch-window-shortcut-appearance 'image)
   (global-set-key (kbd "C-x o") 'switch-window))
 
 ;;;;;;;;;;;;;;;;;;;;;
