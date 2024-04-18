@@ -1,10 +1,21 @@
-;;; Emacs configuration.
-;;; Commentary:
+;;; Prelude
 
-;;; Code:
+;; https://github.com/jschaf/dotfiles/blob/master/emacs/start.el
+;; Make startup faster by reducing the frequency of garbage
+;; collection. The default is 0.8MB. Measured in bytes.
+(setq gc-cons-threshold (* 50 1000 1000))
+;; ;; Portion of heap used for allocation. Defaults to 0.1.
+(setq gc-cons-percentage 0.6)
 
-(defvar me "Thassilo"
-  "This is the user of this configuration.")
+;;;;;;;;;;;;;;;
+;; Customize ;;
+;;;;;;;;;;;;;;;
+
+;; Dedicate a separate file to custom variables.
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(when (and custom-file
+           (file-exists-p custom-file))
+  (load custom-file nil :nomessage))
 
 ;;;;;;;;;;;;;;
 ;; Packages ;;
@@ -16,25 +27,8 @@
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives
-	     '("gnu"   . "https://elpa.gnu.org/packages/") t)
+             '("gnu"   . "https://elpa.gnu.org/packages/") t)
 (package-initialize)
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("fc608d4c9f476ad1da7f07f7d19cc392ec0fb61f77f7236f2b6b42ae95801a62" default))
- '(package-selected-packages
-   '(ligature nlinum treemacs-magit hl-todo web-mode eglot esup exercism exec-path-from-shell auctex ivy yasnippet company yaml-mode visual-fill-column use-package ace-window magit paredit geiser-chicken markdown-mode rainbow-delimiters))
- '(warning-suppress-types '((comp))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
 
 ;; `use-package` install.
 (unless (package-installed-p 'use-package)
@@ -44,136 +38,12 @@
   (setq use-package-always-ensure t
         use-package-expand-minimally t))
 
-(use-package esup
-  :ensure t
-  ;; To use MELPA Stable use ":pin melpa-stable",
-  :pin melpa)
+;;;;;;;;;;;;;
+;; Visuals ;;
+;;;;;;;;;;;;;
 
-
-;;;;;;;;;;;;;;;;;;;
-;; Extra visuals ;;
-;;;;;;;;;;;;;;;;;;;
-
-(setq-default indent-tabs-mode nil)     ; Important!
-
-;;; For packaged versions which must use `require'.
-(use-package modus-themes
-  :ensure t
-  :config
-  ;; Add all your customizations prior to loading the themes
-  (setq modus-themes-italic-constructs t
-        modus-themes-bold-constructs t
-	modus-themes-mixed-fonts t)
-
-  ;; Maybe define some palette overrides, such as by using our presets
-  (setq modus-themes-common-palette-overrides
-        modus-themes-preset-overrides-intense)
-
-  ;; Load the theme of your choice.
-  (load-theme 'modus-operandi)
-
-  (define-key global-map (kbd "<f5>") #'modus-themes-toggle))
-
-;; (use-package almost-mono-themes
-;;   :config
-;;   ;; (load-theme 'almost-mono-black t)
-;;   ;; (load-theme 'almost-mono-gray t)
-;;   ;; (load-theme 'almost-mono-cream t)
-;;   (load-theme 'almost-mono-white t))
-
-(use-package ligature
-  :ensure t
-  :load-path "path-to-ligature-repo"
-  :config
-  ;; Enable the "www" ligature in every possible major mode
-  (ligature-set-ligatures 't '("www"))
-  ;; Enable traditional ligature support in eww-mode, if the
-  ;; `variable-pitch' face supports it
-  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
-  ;; Enable all Cascadia and Fira Code ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode
-                          '(;; == === ==== => =| =>>=>=|=>==>> ==< =/=//=// =~
-                            ;; =:= =!=
-                            ("=" (rx (+ (or ">" "<" "|" "/" "~" ":" "!" "="))))
-                            ;; ;; ;;;
-                            (";" (rx (+ ";")))
-                            ;; && &&&
-                            ("&" (rx (+ "&")))
-                            ;; !! !!! !. !: !!. != !== !~
-                            ("!" (rx (+ (or "=" "!" "\." ":" "~"))))
-                            ;; ?? ??? ?:  ?=  ?.
-                            ("?" (rx (or ":" "=" "\." (+ "?"))))
-                            ;; %% %%%
-                            ("%" (rx (+ "%")))
-                            ;; |> ||> |||> ||||> |] |} || ||| |-> ||-||
-                            ;; |->>-||-<<-| |- |== ||=||
-                            ;; |==>>==<<==<=>==//==/=!==:===>
-                            ("|" (rx (+ (or ">" "<" "|" "/" ":" "!" "}" "\]"
-                                            "-" "=" ))))
-                            ;; \\ \\\ \/
-                            ("\\" (rx (or "/" (+ "\\"))))
-                            ;; ++ +++ ++++ +>
-                            ("+" (rx (or ">" (+ "+"))))
-                            ;; :: ::: :::: :> :< := :// ::=
-                            (":" (rx (or ">" "<" "=" "//" ":=" (+ ":"))))
-                            ;; // /// //// /\ /* /> /===:===!=//===>>==>==/
-                            ("/" (rx (+ (or ">"  "<" "|" "/" "\\" "\*" ":" "!"
-                                            "="))))
-                            ;; .. ... .... .= .- .? ..= ..<
-                            ("\." (rx (or "=" "-" "\?" "\.=" "\.<" (+ "\."))))
-                            ;; -- --- ---- -~ -> ->> -| -|->-->>->--<<-|
-                            ("-" (rx (+ (or ">" "<" "|" "~" "-"))))
-                            ;; *> */ *)  ** *** ****
-                            ("*" (rx (or ">" "/" ")" (+ "*"))))
-                            ;; www wwww
-                            ("w" (rx (+ "w")))
-                            ;; <> <!-- <|> <: <~ <~> <~~ <+ <* <$ </  <+> <*>
-                            ;; <$> </> <|  <||  <||| <|||| <- <-| <-<<-|-> <->>
-                            ;; <<-> <= <=> <<==<<==>=|=>==/==//=!==:=>
-                            ;; << <<< <<<<
-                            ("<" (rx (+ (or "\+" "\*" "\$" "<" ">" ":" "~"  "!"
-                                            "-"  "/" "|" "="))))
-                            ;; >: >- >>- >--|-> >>-|-> >= >== >>== >=|=:=>>
-                            ;; >> >>> >>>>
-                            (">" (rx (+ (or ">" "<" "|" "/" ":" "=" "-"))))
-                            ;; #: #= #! #( #? #[ #{ #_ #_( ## ### #####
-                            ("#" (rx (or ":" "=" "!" "(" "\?" "\[" "{" "_(" "_"
-					 (+ "#"))))
-                            ;; ~~ ~~~ ~=  ~-  ~@ ~> ~~>
-                            ("~" (rx (or ">" "=" "-" "@" "~>" (+ "~"))))
-                            ;; __ ___ ____ _|_ __|____|_
-                            ("_" (rx (+ (or "_" "|"))))
-                            ;; Fira code: 0xFF 0x12
-                            ("0" (rx (and "x" (+ (in "A-F" "a-f" "0-9")))))
-                            ;; Fira code:
-                            "Fl"  "Tl"  "fi"  "fj"  "fl"  "ft"
-                            ;; The few not covered by the regexps.
-                            "{|"  "[|"  "]#"  "(*"  "}#"  "$>"  "^="))
-  ;; Enables ligature checks globally in all buffers. You can also do it
-  ;; per mode with `ligature-mode'.
-  (global-ligature-mode t))
-
-(use-package nlinum
-  :ensure t
-  :config
-  ;; Preset `nlinum-format' for minimum width.
-  (defun my-nlinum-mode-hook ()
-    (when nlinum-mode
-      (setq-local nlinum-format
-                  (concat "%" (number-to-string
-                               ;; Guesstimate number of buffer lines.
-                               (ceiling (log (max 1 (/ (buffer-size) 80)) 10)))
-                          "d"))))
-  (add-hook 'nlinum-mode-hook #'my-nlinum-mode-hook))
-
-;; (use-package solarized-theme
-;;   :ensure t
-;;   :config
-;;   (setq solarized-use-more-italic t)
-;;   (setq solarized-scale-markdown-headlines t)
-;;   (setq x-underline-at-descent-line t)
-;;   ;; All settings must precede `load-theme`.
-;;   (load-theme 'solarized-light t))
+;; Make Emacs use spaces for all indentation -- important!
+(setq-default indent-tabs-mode nil)
 
 ;; Highlight TODO, FIXME, etc.
 (use-package hl-todo
@@ -186,81 +56,24 @@
 	  ("NOTE"  . "#6bd600")
 	  ("NOTES"  . "#6bd600")
           ("DEBUG" . "#a020f0")))
-  ;; For some reason using :bind broke the (global-hl-todo-mode 1).
+  ;; For some reason using :bind broke (global-hl-todo-mode 1).
   (keymap-set hl-todo-mode-map "C-c p" #'hl-todo-previous)
   (keymap-set hl-todo-mode-map "C-c n" #'hl-todo-next)
   (keymap-set hl-todo-mode-map "C-c o" #'hl-todo-occur)
   (keymap-set hl-todo-mode-map "C-c i" #'hl-todo-insert))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Shell-related configuration ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Inherit a shell's environment variables to run commands as usual.
-(use-package exec-path-from-shell
-  :ensure t
-  :config
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
-
-;; Zsh shell shortcut.
-(defun zsh ()
-  "Run terminal without asking what shell to use."
-  (interactive)
-  (ansi-term "/usr/bin/zsh"))
-
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window navigation ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Switch windows using ace-window.
-(global-set-key (kbd "C-x o") 'ace-window)
+(use-package switch-window
+  :ensure t
+  :config
+  (global-set-key (kbd "C-x o") 'switch-window))
 
-(defun my/toggle-window-split ()
-  "Switch from vertical to horizontal split and vice versa."
-  (interactive)
-  (if (= (count-windows) 2)
-      (let* ((this-win-buffer (window-buffer))
-             (next-win-buffer (window-buffer (next-window)))
-             (this-win-edges (window-edges (selected-window)))
-             (next-win-edges (window-edges (next-window)))
-             (this-win-2nd (not (and (<= (car this-win-edges)
-					 (car next-win-edges))
-				     (<= (cadr this-win-edges)
-					 (cadr next-win-edges)))))
-             (splitter
-              (if (= (car this-win-edges)
-		     (car (window-edges (next-window))))
-		  'split-window-horizontally
-		'split-window-vertically)))
-	(delete-other-windows)
-	(let ((first-win (selected-window)))
-	  (funcall splitter)
-	  (if this-win-2nd (other-window 1))
-	  (set-window-buffer (selected-window) this-win-buffer)
-	  (set-window-buffer (next-window) next-win-buffer)
-	  (select-window first-win)
-	  (if this-win-2nd (other-window 1))))))
-
-(global-set-key (kbd "C-x |") #'my/toggle-window-split)
-
-
-;;;;;;;;;;;
-;; Email ;;
-;;;;;;;;;;;
-
-;; Ensure that `$HOME/.authinfo` exists for this to work.
-(setq mail-user-agent 'message-user-agent)
-(setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-stream-type 'starttls
-      smtpmail-smtp-server "posteo.de"
-      smtpmail-smtp-service 587)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Language server and auto-completion ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
+;; Auto completion ;;
+;;;;;;;;;;;;;;;;;;;;;
 
 (use-package ivy
   :ensure
@@ -270,294 +83,87 @@
   (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order)))
   (setq enable-recursive-minibuffers t))
 
+(use-package company
+  :ensure
+  :custom
+  (company-idle-delay 0.5) ;; Wait half a second until the popup comes up.
+  :bind
+  (:map company-active-map
+        ("C-n". company-select-next)
+        ("C-p". company-select-previous)
+        ("M-<". company-select-first)
+        ("M->". company-select-last))
+  :hook (prog-mode . company-mode))
 
+;;;;;;;;;;;;;;;;;;
+;; Text editing ;;
+;;;;;;;;;;;;;;;;;;
+
+;; Manage parenthesis
+(electric-pair-mode t)
+
+;; Show both line and column numbers
+(setq line-number-mode t)
+(setq column-number-mode t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Programming languages ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+
+(use-package paredit
+  :ensure t
+  :config
+  :hook ((emacs-lisp-mode . enable-paredit-mode)
+         (lisp-mode . enable-paredit-mode)
+         (lisp-interaction-mode . enable-paredit-mode)
+         (scheme-mode-hook . enable-paredit-mode)))
+
+(use-package geiser-chicken :ensure t)
+
+(add-hook 'c-mode-hook (lambda () (c-toggle-comment-style -1)))
+
+(use-package rust-mode :ensure t)
+
+;; Note that the language servers come separately.
 (use-package eglot
   :ensure t
   :hook ((haskell-mode . eglot-ensure)
-	 (c-mode . eglot-ensure)
-	 (c++-mode . eglot-ensure)
-	 (rust-mode . eglot-ensure)
-	 (lisp-mode . eglot-ensure)
-	 (emacs-lisp-mode . eglot-ensure))
+         (c-mode . eglot-ensure)
+         (c++-mode . eglot-ensure)
+         (rust-mode . eglot-ensure)
+         (lisp-mode . eglot-ensure)
+         (emacs-lisp-mode . eglot-ensure))
   :config
   (setq-default eglot-workspace-configuration
                 '((haskell
                    (plugin
                     (stan
-                     (globalOn . :json-false))))))  ;; disable stan
+                     (globalOn . :json-false)))))) ;; disable stan
   (define-key eglot-mode-map (kbd "C-c r") #'eglot-rename)
   (define-key eglot-mode-map (kbd "C-c f") #'eglot-format)
   (define-key eglot-mode-map (kbd "C-c m") #'imenu)
   :custom
-  (eglot-autoshutdown t)  ;; shutdown language server after closing last file
-  (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
-  )
-
-(use-package company
-  :ensure
-  :custom
-  (company-idle-delay 0.5) ;; how long to wait until popup
-  ;; (company-begin-commands nil) ;; uncomment to disable popup
-  :bind
-  (:map company-active-map
-	("C-n". company-select-next)
-	("C-p". company-select-previous)
-	("M-<". company-select-first)
-	("M->". company-select-last)
-	("<tab>". tab-indent-or-complete)
-	("TAB". tab-indent-or-complete))
-  :hook (prog-mode . company-mode))
-
-(add-hook 'c-mode-hook (lambda () (c-toggle-comment-style -1)))
-
-(defun company-yasnippet-or-completion ()
-  (interactive)
-  (or (do-yas-expand)
-      (company-complete-common)))
-
-(defun check-expansion ()
-  (save-excursion
-    (if (looking-at "\\_>") t
-      (backward-char 1)
-      (if (looking-at "\\.") t
-        (backward-char 1)
-        (if (looking-at "::") t nil)))))
-
-(defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-    (yas/expand)))
-
-(defun tab-indent-or-complete ()
-  (interactive)
-  (if (minibufferp)
-      (minibuffer-complete)
-    (if (or (not yas/minor-mode)
-            (null (do-yas-expand)))
-        (if (check-expansion)
-            (company-complete-common)
-          (indent-for-tab-command)))))
-
-(use-package yasnippet
-  :ensure
-  :config
-  (yas-reload-all)
-  (add-hook 'prog-mode-hook 'yas-minor-mode)
-  (add-hook 'text-mode-hook 'yas-minor-mode))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Language-specific configuration ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; `paredit-mode` is used for sexpy languages.
-(autoload 'enable-paredit-mode "paredit"
-  "Turn on pseudo-structural editing of Lisp code." t)
-(dolist (hook '(emacs-lisp-mode-hook
-		eval-expression-minibuffer-setup-hook
-		ielm-mode-hook
-		lisp-mode-hook
-		lisp-interaction-mode-hook
-		scheme-mode-hook))
-  (add-hook hook #'enable-paredit-mode))
-
-;; Scheme language configuration.
-(add-hook 'scheme-mode-hook 'turn-on-geiser-mode)  ;; Use Geiser.
-(setq scheme-program-name "/usr/bin/csi")  ;; Use CHICKEN scheme.
-
-(add-hook 'prog-mode-hook #'nlinum-mode)
-(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
-(add-hook 'prog-mode-hook #'flyspell-prog-mode)
-(add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
-(add-hook 'prog-mode-hook (lambda () (set-fill-column 80)))
-
-(dolist (hook '(c-mode-hook c++-mode-hook web-mode-hook rust-mode-hook haskell-mode-hook))
-  (add-hook hook #'electric-pair-mode))
-
-;; Better C comments https://emacs.stackexchange.com/a/14613.
-(defun my/prettify-c-block-comment (orig-fun &rest args)
-  "Prettify the format of C multi-line comments."
-  (let* ((first-comment-line (looking-back "/\\*\\s-*.*"))
-         (star-col-num (when first-comment-line
-                         (save-excursion
-                           (re-search-backward "/\\*")
-                           (1+ (current-column))))))
-    (apply orig-fun args)
-    (when first-comment-line
-      (save-excursion
-        (newline)
-        (dotimes (cnt star-col-num)
-          (insert " "))
-        (move-to-column star-col-num)
-        (insert "*/"))
-      (move-to-column star-col-num)	; comment this line if using bsd style
-      (insert "*")			; comment this line if using bsd style
-      ))
-  ;; Ensure one space between the asterisk and the comment
-  (when (not (looking-back " "))
-    (insert " ")))
-;; (advice-add 'c-indent-new-comment-line :around #'my/prettify-c-block-comment)
-(advice-remove 'c-indent-new-comment-line #'my/prettify-c-block-comment)
-
-(use-package web-mode
-  :config
-  (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-  (setq web-mode-enable-auto-closing t))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;
-;; Project management ;;
-;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package treemacs
-  :ensure t
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  :config
-  (progn
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode 'always)
-    (when treemacs-python-executable
-      (treemacs-git-commit-diff-mode t))
-
-    (pcase (cons (not (null (executable-find "git")))
-                 (not (null treemacs-python-executable)))
-      (`(t . t)
-       (treemacs-git-mode 'deferred))
-      (`(t . _)
-       (treemacs-git-mode 'simple)))
-
-    (treemacs-hide-gitignored-files-mode nil))
-  :bind
-  (:map global-map
-        ("M-0"       . treemacs-select-window)
-        ("C-c t 1"   . treemacs-delete-other-windows)
-        ("C-c t t"     . treemacs)
-        ("C-c t d"   . treemacs-select-directory)
-        ("C-c t B"   . treemacs-bookmark)
-        ("C-c t C-t" . treemacs-find-file)
-        ("C-c t M-t" . treemacs-find-tag)))
-
-;;; Better magit integration.
-(use-package treemacs-magit
-  :after (treemacs magit)
-  :ensure t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Writing in Markdown and Jekyll ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun highlight-text-comments ()
-  "Highlight comments inside brackets inserted inline into text documents"
-  (interactive)
-  (hi-lock-mode 1)
-  (highlight-regexp "\\[[^\\[]*\\]" 'hi-yellow))
-(defun highlight-text-highlights ()
-  "Highlight highlighted text inside pluses inserted inline into text documents"
-  (interactive)
-  (hi-lock-mode 1)
-  (highlight-regexp "\\+[^\\+]*\\+" 'hi-pink))
-(defun un-highlight-text ()
-  "Disable highlighting in text"
-  (interactive)
-  (hi-lock-mode 0))
-(define-key global-map (kbd "C-c m c") #'highlight-text-comments)
-(define-key global-map (kbd "C-c m h") #'highlight-text-highlights)
-(define-key global-map (kbd "C-c m u") #'un-highlight-text-comments)
-
-;; Settings to improve writing text documents.
-(defun writing ()
-  (setq fill-column 100)
-  ;; Visual line mode and visual column mode for text.
-  (setq-default visual-fill-column-center-text t)
-  (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
-  (turn-on-visual-line-mode)
-  (highlight-text-comments)
-  (highlight-text-highlights))
-
-;; Markdown and plain-text configuration.
-(use-package markdown-mode
-  :ensure t
-  :mode ("README\\.md\\'" . gfm-mode)
-  :init (setq markdown-command "pandoc --from=markdown --to=html -s --mathjax"))
-(add-hook 'markdown-mode-hook #'writing)
-
-(use-package motes
-  :load-path "elisp/"
-  :config (setq motes-author me)
-  :bind
-  ("C-c m p" . #'motes-preview)
-  ("C-c m s" . #'motes-share)
-  ("C-c m n" . #'motes-new))
-
-;; Run a Jekyll server in the current directory.
-(defun my/run-jekyll-serve (flags)
-  "Launch a Jekyll development server"
-  (interactive (list (read-string "Flags: " "--drafts")))
-  (if (file-exists-p (concat default-directory "_config.yml"))
-      (async-shell-command (concat "jekyll serve " flags))
-    (message "There is no _config.yml in this directory. Without it, this directory cannot be a Jekyll root.")))
-(define-key global-map (kbd "C-c j") #'my/run-jekyll-serve)
-
+  (eglot-autoshutdown t) ;; Shutdown language server after closing last file
+  (eglot-confirm-server-initiated-edits nil))  ;; Allow edits without confirmation
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Spell checking ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(with-eval-after-load "ispell"
-  ;; Configure default dictionary.
-  (setenv "LANG" "en_US.UTF-8")
-  (setq ispell-program-name "hunspell")
-  (setq ispell-dictionary "de_DE,en_US")
-  ;; Call to make ispell-hunspell-add-multi-dic work:
-  (ispell-set-spellchecker-params)
-  (ispell-hunspell-add-multi-dic "de_DE,en_US")
-  ;; NOTE: .hunspell_personal MUST exist. Otherwise it's not used.
-  (setq ispell-personal-dictionary "~/.hunspell_personal"))
-
-;; Use double-tap to correct word (required for touch-pads only).
-(eval-after-load "flyspell"
-  '(progn
-     (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
-     (define-key flyspell-mouse-map [mouse-3] #'undefined)))
-
-(dolist (hook '(text-mode-hook markdown-mode-hook))
-  (add-hook hook #'flyspell-mode))
-
+;; This package requires libenchant and pkgconf. Make sure they're installed!
+(use-package jinx
+  :ensure t
+  :hook (emacs-startup . global-jinx-mode)
+  :bind (("M-$" . jinx-correct)
+         ("C-M-$" . jinx-languages)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; Miscellaneous ;;
 ;;;;;;;;;;;;;;;;;;;
 
-;;; Garbage collection only in the case that the Emacs is on
-;;; idle for 15s. That means, garbage collection happens only
-;;; if the user is doing something different than coding.
-;;; See https://akrl.sdf.org/#orgc15a10d.
-(defmacro k-time (&rest body)
-  "Measure and return the time it takes evaluating BODY."
-  `(let ((time (current-time)))
-     ,@body
-     (float-time (time-since time))))
-
-;; Set garbage collection threshold to 1GB.
-(setq gc-cons-threshold #x40000000)
-
-;; When idle for 15sec run the GC no matter what.
-(defvar k-gc-timer
-  (run-with-idle-timer 15 t
-                       (lambda ()
-                         (message "Garbage Collector has run for %.06fsec"
-                                  (k-time (garbage-collect))))))
-
+;; Remove these annoying warnings.
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
@@ -572,109 +178,8 @@
 (setq backup-directory-alist '(("." . "~/.emacs_backups/")))
 (setq backup-by-copying t)
 
-;; Files must end with a newline.
-(setq require-final-newline t)
-
-(setq show-trailing-whitespace t)
-
-(use-package exercism
-  :ensure t
-  :bind ("C-c e" . #'exercism)
-  :config
-  (setq exercism-display-tests-after-run t))
-
-(mouse-wheel-mode -1)
-(global-set-key [wheel-up] 'ignore)
-(global-set-key [double-wheel-up] 'ignore)
-(global-set-key [triple-wheel-up] 'ignore)
-
-(global-set-key [wheel-down] 'ignore)
-(global-set-key [double-wheel-down] 'ignore)
-(global-set-key [triple-wheel-down] 'ignore)
-
-(global-set-key [wheel-left] 'ignore)
-(global-set-key [double-wheel-left] 'ignore)
-(global-set-key [triple-wheel-left] 'ignore)
-
-(global-set-key [wheel-right] 'ignore)
-(global-set-key [double-wheel-right] 'ignore)
-(global-set-key [triple-wheel-right] 'ignore)
-
-(global-set-key [mouse-4] 'ignore)
-(global-set-key [double-mouse-4] 'ignore)
-(global-set-key [triple-mouse-4] 'ignore)
-
-(global-set-key [mouse-5] 'ignore)
-(global-set-key [double-mouse-5] 'ignore)
-(global-set-key [triple-mouse-5] 'ignore)
-
-;; Blink the cursor forever.
-;; (setq blink-cursor-blinks 0)
-
-(defun has-logged-in-last-hour ()
-  "Check if the last login message is from less than an hour ago"
-  (defun find-last-line-with-prefix (file prefix)
-    "Find the last line in FILE that starts with PREFIX"
-    (let ((pat (concat "^" prefix)))
-      (with-temp-buffer
-	(insert-file-contents file)
-	(goto-char (point-max))
-	(while (and (not (bobp))		; beginning-of-buffer-prediacte
-		    (not (looking-at-p pat)))
-	  (forward-line -1))
-	(if (looking-at-p pat)
-	    (buffer-substring-no-properties
-	     (line-beginning-position)
-	     (line-end-position))
-	  nil))))
-
-  (defun time-string-to-list-timestamp (s)
-    (time-convert (encode-time (parse-time-string s)) 'list))
-
-  (defun seconds-diff (t1 t2)
-    (time-convert
-     (time-subtract t1 t2)
-     'integer))
-
-  (let ((login-msg-raw (find-last-line-with-prefix "/home/thasso/TEXT" ":: ")))
-    (if login-msg-raw
-	(let ((login-msg (substring login-msg-raw 3)))
-	  (if (string-equal "new login"
-			    (cadr (split-string login-msg " - ")))
-	      (let ((last-login (time-string-to-list-timestamp
-				 (car (string-split login-msg " - "))))
-		    (now (current-time)))
-		(< (seconds-diff now last-login) 3600))
-	    nil)))))
-
-(defun login-to-text ()
-  "Every time Emacs is started, write a login message to ~/TEXT"
-  (with-current-buffer (find-file-noselect "/home/thasso/TEXT")
-    (goto-char (point-max))
-    (if (not (has-logged-in-last-hour))
-	(insert "\n:: " (format-time-string "%Y-%m-%d %T") " - new login\n"))
-    (save-buffer)))
-
-(add-hook 'emacs-startup-hook 'login-to-text)
-
-(defun insert-copyright ()
-  "Inserts a copyright message as a comment in the current buffer."
-  (interactive)
-  (let ((copyright-msg
-         (concat "Copyright (c) " me " " (format-time-string "%Y"))))
-    (save-excursion
-      ;; (beginning-of-line)
-      (let ((msg-start (point)))
-	(insert copyright-msg)
-	;; See https://irreal.org/blog/?p=371 for why
-	;; the last argument is 1.
-	(comment-region msg-start (point-at-eol) 1)))))
-
 (define-key global-map (kbd "C-c ;") #'comment-box)
 
-(provide 'init)
-;;; init.el ends here
+;;; Epilogue
 
-; LocalWords:  melpa flyspell zsh csi usr after-init-hook ispell md
-; LocalWords:  global-flycheck-mode mathjax paredit-mode sexpy US.UTF
-; LocalWords:  hunspell pandoc html
+(setq gc-cons-threshold (* 2 1000 1000))
