@@ -45,6 +45,8 @@
 ;; Make Emacs use spaces for all indentation -- important!
 (setq-default indent-tabs-mode nil)
 
+(setq-default truncate-lines t)
+
 ;; Highlight TODO, FIXME, etc.
 (use-package hl-todo
   :ensure t
@@ -66,19 +68,18 @@
 ;; Window navigation ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package switch-window
+(use-package ace-window
   :ensure t
   :config
-  (setq switch-window-image-directory "~/.emacs.d/switch-window-label-images")
-  (setq switch-window-shortcut-appearance 'image)
-  (global-set-key (kbd "C-x o") 'switch-window))
+  (setq aw-scope 'global))
+(global-set-key (kbd "C-x o") 'ace-window)
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Auto completion ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
 (use-package ivy
-  :ensure
+  :ensure t
   :config
   (ivy-mode)
   (setq ivy-use-virtual-buffers t)
@@ -108,6 +109,13 @@
 (setq line-number-mode t)
 (setq column-number-mode t)
 
+;; For markdown writing. Requires pandoc.
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init
+  (setq markdown-command '("pandoc" "--from=markdown" "--to=html5")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Programming languages ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -125,6 +133,8 @@
 (use-package geiser-chicken :ensure t)
 
 (add-hook 'c-mode-hook (lambda () (c-toggle-comment-style -1)))
+(setq c-default-style '((c-mode . "k&r")))
+(setq-default c-basic-offset 4)
 
 (use-package rust-mode :ensure t)
 
@@ -132,7 +142,7 @@
 (use-package eglot
   :ensure t
   :hook ((haskell-mode . eglot-ensure)
-         (c-mode . eglot-ensure)
+         ;; (c-mode . eglot-ensure)
          (c++-mode . eglot-ensure)
          (rust-mode . eglot-ensure)
          (lisp-mode . eglot-ensure)

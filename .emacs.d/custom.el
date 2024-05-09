@@ -13,7 +13,7 @@
      ("stable" . 70)
      ("melpa" . 0)))
  '(package-selected-packages
-   '(rust-mode geiser-chicken paredit auto-package-update jinx wrap-region dashboard company ivy switch-window exec-path-from-shell hl-todo esup)))
+   '(ace-window markdown-mode rust-mode geiser-chicken paredit auto-package-update jinx wrap-region dashboard company ivy exec-path-from-shell hl-todo esup)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
