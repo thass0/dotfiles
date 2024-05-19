@@ -142,7 +142,7 @@
 (use-package eglot
   :ensure t
   :hook ((haskell-mode . eglot-ensure)
-         ;; (c-mode . eglot-ensure)
+         (c-mode . eglot-ensure)
          (c++-mode . eglot-ensure)
          (rust-mode . eglot-ensure)
          (lisp-mode . eglot-ensure)
@@ -159,6 +159,7 @@
   :custom
   (eglot-autoshutdown t) ;; Shutdown language server after closing last file
   (eglot-confirm-server-initiated-edits nil))  ;; Allow edits without confirmation
+
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Spell checking ;;
