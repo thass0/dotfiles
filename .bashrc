@@ -1,20 +1,28 @@
-# .bashrc
-
 # Source global definitions
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-# Uncomment the following line if you don't like systemctl's auto-paging feature:
-# export SYSTEMD_PAGER=
+# Dot file configuration inspired by https://news.ycombinator.com/item?id=11071754.
+# This post has instructions on how to clone the config:
+# https://www.atlassian.com/git/tutorials/dotfiles
+# Initialize with `git init --bare $HOME/.dotfiles
 
-# User specific aliases and functions
-if [ -d ~/.bashrc.d ]; then
-    for rc in ~/.bashrc.d/*; do
-	if [ -f "$rc" ]; then
-	    . "$rc"
-	fi
-    done
-fi
+alias config-git="git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 
-unset rc
+function git() {
+  if [[ $@ == "log" ]]; then
+    command git log --all --decorate --graph
+  else
+    command git "$@"
+  fi
+}
+
+# List everything by default unless we're in $HOME
+function ls() {
+    if  [[ $PWD == $HOME ]]; then
+      command ls $@
+  else
+      command ls -a $@
+  fi
+}

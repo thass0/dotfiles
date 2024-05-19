@@ -193,6 +193,11 @@
 
 (define-key global-map (kbd "C-c ;") #'comment-box)
 
+(defun bash ()
+  "Open a shell running bash"
+  (interactive)
+  (ansi-term "/usr/bin/bash"))
+
 ;;; Epilogue
 
 (setq gc-cons-threshold (* 2 1000 1000))
