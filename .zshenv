@@ -1,10 +1,4 @@
-. "$HOME/.cargo/env"
-. "$HOME/.ghcup/env"
-
 PATH="$PATH:$HOME/.local/bin"
-PATH="$PATH:$HOME/.config/emacs/bin"
-PATH="$PATH:$HOME/.emacs.d/bin"
-PATH="$PATH:$HOME/.nimble/bin"
 PATH="$HOME/bin:$PATH"
 export PATH
 
@@ -15,7 +9,7 @@ export PATH
 # This leaves open a security hole. Only used it locally!
 # export NODE_OPTIONS=--openssl-legacy-provider
 
-# URL for motes-share.
-export MOTES_URL="https://thassilo.work"
-
-export EDITOR="vim"
+# Can't use nano as editor because it doesn't work in a shell running inside
+# Emacs (Emacs and nano key bindings conflict). Can't use vim either because
+# vim doesn't come with with Fedora by default. So vi it is!
+export EDITOR="vi"
