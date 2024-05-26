@@ -42,3 +42,5 @@ export PATH
 # Emacs (Emacs and nano key bindings conflict). Can't use vim either because
 # vim doesn't come with with Fedora by default. So vi it is!
 export EDITOR="vi"
+
+export YACC=bison

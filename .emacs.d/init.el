@@ -113,6 +113,7 @@
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
+  :mode ("\\.mdx\\'" . markdown-mode)
   :init
   (setq markdown-command '("pandoc" "--from=markdown" "--to=html5")))
 
