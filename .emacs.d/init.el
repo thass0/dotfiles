@@ -64,6 +64,14 @@
   (keymap-set hl-todo-mode-map "C-c o" #'hl-todo-occur)
   (keymap-set hl-todo-mode-map "C-c i" #'hl-todo-insert))
 
+(setq frame-title-format
+      '("Emacs: "
+        (:eval
+         (if buffer-file-name
+             (abbreviate-file-name buffer-file-name)
+           "%b"))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window navigation ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
