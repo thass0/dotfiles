@@ -71,7 +71,6 @@
              (abbreviate-file-name buffer-file-name)
            "%b"))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window navigation ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -141,9 +140,7 @@
 
 (use-package geiser-chicken :ensure t)
 
-(add-hook 'c-mode-hook (lambda () (c-toggle-comment-style -1)))
-(setq c-default-style '((c-mode . "k&r")))
-(setq-default c-basic-offset 4)
+(setq c-default-style '((c-mode . "linux")))
 
 (use-package rust-mode :ensure t)
 
