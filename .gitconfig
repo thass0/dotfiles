@@ -1,6 +1,3 @@
-[user]
-	email = thassilo@thasso.xyz
-	name = Thassilo Schulze
 [credential]
 	helper = store
 [init]
@@ -12,3 +9,10 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+
+[user]
+	name = Thassilo Schulze
+    email = thassilo@thasso.xyz
+
+[includeIf "gitdir:**/Work/**"]
+	path = .gitconfig-unikraft

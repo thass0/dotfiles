@@ -44,3 +44,4 @@ export PATH
 export EDITOR="vi"
 
 export YACC=bison
+. "$HOME/.cargo/env"
