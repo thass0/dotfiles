@@ -1,0 +1,7 @@
+{
+    "workbench.colorTheme": "Quiet Light",
+    "security.workspace.trust.untrustedFiles": "open",
+    "window.titleBarStyle": "custom",
+    "git.openRepositoryInParentFolders": "never",
+    "editor.rulers": [80]
+}
