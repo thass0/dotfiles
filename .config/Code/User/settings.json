@@ -1,7 +1,14 @@
 {
-    "workbench.colorTheme": "Quiet Light",
-    "security.workspace.trust.untrustedFiles": "open",
+	"security.workspace.trust.untrustedFiles": "open",
     "window.titleBarStyle": "custom",
     "git.openRepositoryInParentFolders": "never",
-    "editor.rulers": [80]
+    "editor.rulers": [
+        80
+],
+"editor.detectIndentation": false,
+"editor.insertSpaces": false,
+"vim.useSystemClipboard": true,
+"extensions.ignoreRecommendations": true,
+"explorer.confirmDelete": false,
+"editor.stickyTabStops": true,
 }

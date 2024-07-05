@@ -39,9 +39,13 @@ export PATH
 # export NODE_OPTIONS=--openssl-legacy-provider
 
 # Can't use nano as editor because it doesn't work in a shell running inside
-# Emacs (Emacs and nano key bindings conflict). Can't use vim either because
-# vim doesn't come with with Fedora by default. So vi it is!
-export EDITOR="vi"
+# Emacs (Emacs and nano key bindings conflict). Vim is good enough
+export EDITOR="vim"
 
 export YACC=bison
 . "$HOME/.cargo/env"
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
