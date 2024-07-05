@@ -11,4 +11,5 @@
 "extensions.ignoreRecommendations": true,
 "explorer.confirmDelete": false,
 "editor.stickyTabStops": true,
+"workbench.colorTheme": "Gruvbox Dark Hard"
 }
